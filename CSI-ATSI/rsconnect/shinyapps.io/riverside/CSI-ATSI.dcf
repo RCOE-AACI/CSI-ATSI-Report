@@ -1,0 +1,12 @@
+name: CSI-ATSI
+title: CSI-ATSI
+username:
+account: riverside
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 1123469
+bundleId: 2368144
+url: https://riverside.shinyapps.io/CSI-ATSI/
+when: 1567092570.81767
+asMultiple: FALSE
+asStatic: FALSE

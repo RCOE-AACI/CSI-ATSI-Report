@@ -328,6 +328,9 @@ support_audit <- support_level %>%
 rcoe_csi <- support_level %>%
   filter(substr(cds,1,2) == "33")
 
+# Create ATSI Info
+
+
 # Save data for Shiny app
 
 saveRDS(support_level_w_demos, file = 'CSI-ATSI/support_level.RDS')
