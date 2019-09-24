@@ -5,8 +5,8 @@ account: riverside
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1123469
-bundleId: 2368144
+bundleId: 2441088
 url: https://riverside.shinyapps.io/CSI-ATSI/
-when: 1567092570.81767
+when: 1569340744.53962
 asMultiple: FALSE
 asStatic: FALSE

@@ -318,7 +318,9 @@ demos_all <- demos %>%
 support_level_w_demos <-
   support_level %>%
   left_join(demos_all) %>%
-  mutate(school_w_district = paste0(schoolname, ' (', districtname, ')'))
+  mutate(school_w_district = paste0(schoolname, ' (', districtname, ')'),
+         mismatch = if_else(identification != CDEStatus, TRUE, FALSE)) %>%
+  filter(mismatch == FALSE)
 
 # Audit
 support_audit <- support_level %>%
