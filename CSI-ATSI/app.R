@@ -95,13 +95,17 @@ ui <- fluidPage(
     # Show a plot of the generated distribution
     mainPanel(
       fluidRow(
-        column(6,
+        column(5,
                div(h3(strong("School:"), textOutput("title")), p(em("CDS: "),textOutput("cds", inline = TRUE)))
         ),
-        column(6,
+        column(4,
                fluidRow(h2("Identification Status")),
                uiOutput("status")
-               )
+               ),
+        column(3,
+               fluidRow(h2("Title I Status")),
+               uiOutput("titlei")
+        )
       ),
       hr(),
       fluidRow(
@@ -281,6 +285,11 @@ server <- function(input, output) {
   output$cds <-
     renderText({
       schoolData()$cds
+    })
+  
+  output$titlei <-
+    renderUI({
+      h3(schoolData()$TitleI1718)
     })
   
   output$el <-
