@@ -86,7 +86,9 @@ ui <- fluidPage(
                      width = "400px",
                      selected = ""),
       fluidRow(
-        div("This application enables you to lookup any school in the State of California and better understand its status within the California System of Support. ")
+        div("This application enables you to lookup any school in the State of California and better understand its status within the California System of Support. "),
+        br(),
+        div("For more information on Comprehensive Support and Improvement, please go to the ", a(href="https://www.cde.ca.gov/sp/sw/t1/csi.asp", "California Department of Education's CSI website"), ".")
       ),
       width = 3),
     
