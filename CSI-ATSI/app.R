@@ -10,18 +10,28 @@ library(tidyverse)
 library(shiny)
 library(DT)
 
+# Main file import
 support_level <- readRDS('support_level.RDS')
+
+# Group level data
 group_file <- readRDS('group_file.RDS')
-school_choices <- sort(support_level$school_w_district)
+
+# Lists of entities
 directory <- readRDS('directory.RDS')
 county_list <- readRDS('county_list.RDS')
 lea_list <- readRDS('lea_list.RDS')
 
-county_list_named <- as.character(c(" ", county_list$cds))
-names(county_list_named) <- c(" ", county_list$County)
+# Dropdown data
+county_list_named <- as.character(county_list$cds)
+names(county_list_named) <- county_list$County
 
-filtered_leas <- support_level %>% pull(districtname) %>% unique()
+lea_list_named <- as.character(lea_list$cds)
+names(lea_list_named) <- lea_list$District
 
+school_list_named <- as.character(support_level$cds)
+names(school_list_named) <- support_level$school_w_district
+
+# Create student group dataframe for app
 studentgrouplist <- c(
   'EL',
   'SED',
@@ -91,20 +101,32 @@ ui <- fluidPage(
   # Sidebar with a slider input for number of bins 
   sidebarLayout(
     sidebarPanel(
-      selectInput("countyName",
-                  h3("Select County"),
-                  choices = county_list_named,
-                  selected = " "),
-      conditionalPanel(
-        condition = "input.countyName != ' ' ",
-        selectInput("districtName",
-                     h4("Select District"),
-                     choices=filtered_leas)),
+      selectizeInput("countyName",
+                     "County",
+                     choices = c("Choose a county"="", county_list_named),
+                     width = "400px"
+      ),
+      selectizeInput("districtName",
+                     "District",
+                     choices = c("Choose a district"="", lea_list_named),
+                     width = "400px"
+      ),
       selectizeInput("schoolName",
-                     "Please type in a school name:",
-                     choices = c("Choose"="", school_choices),
-                     width = "400px",
-                     selected = ""),
+                     "School",
+                     choices = c("Choose a school"="", school_list_named),
+                     width = "400px"
+      ),
+      checkboxGroupInput("identification",
+                         "CDE Identification",
+                         choices = c("CSI Grad",
+                                     "CSI Low Perform",
+                                     "ATSI",
+                                     "General Assistance"),
+                         selected = c("CSI Grad",
+                                      "CSI Low Perform",
+                                      "ATSI",
+                                      "General Assistance")
+      ),
       fluidRow(
         div("This application enables you to lookup any school in the State of California and better understand its status within the California System of Support. "),
         br(),
@@ -216,18 +238,60 @@ ui <- fluidPage(
 )
 
 # Define server logic required to draw a histogram
-server <- function(input, output) {
+server <- function(input, output, session) {
   
-  filtered_leas <- reactive({
-    tempChoice <- support_level %>% filter(subset(cds,1,2) == input$countyname) %>% pull(districtname) %>% unique() 
-  
-    return(tempChoice)
-    })
+   observe({
+     # Update school list based upon county/district filters
+     
+     county <- input$countyName
+     district <- input$districtName
+     ident <- input$identification
+     
+     # print(ident)
+     
+     if ((county != "" & district == "") | (substr(district,1,2) != county) ) {
+     
+     # Filter districts by county
+     filtered_leas <- lea_list %>%
+       filter(substr(cds,1,2) == county)
+       
+     
+     lea_list_filtered <- as.character(filtered_leas$cds)
+     names(lea_list_filtered) <- filtered_leas$District
+     
+     updateSelectizeInput(session, "districtName",
+                            choices = c("Choose a district"="", lea_list_filtered))
+     
+     # Filter schools by county
+     filtered_schools <- support_level %>%
+       filter(substr(cds,1,2) == county) %>%
+       filter(identification %in% ident)
+     
+     school_list_filtered <- as.character(filtered_schools$cds)
+     names(school_list_filtered) <- filtered_schools$school_w_district
+     
+     updateSelectizeInput(session, "schoolName",
+                          choices = c("Choose a school"="", school_list_filtered))
+     } else if (county != "" & district != "") {
+       
+       filtered_schools <- support_level %>%
+         filter(substr(cds,1,7) == district) %>%
+         filter(identification %in% ident)
+       
+       school_list_filtered <- as.character(filtered_schools$cds)
+       names(school_list_filtered) <- filtered_schools$school_w_district
+       
+       updateSelectizeInput(session, "schoolName",
+                            choices = c("Choose a school"="", school_list_filtered))
+       
+       
+     }
+   })
   
   schoolData <- reactive({
     
     tempData <- support_level %>%
-      filter(`school_w_district` == input$schoolName) %>%
+      filter(`cds` == input$schoolName) %>%
       mutate(grad_average = round(grad_average, digits = 1)) # %>%
     # mutate_if(is.logical, transform_logical)
     
@@ -237,7 +301,7 @@ server <- function(input, output) {
   dashboard <- reactive({
     req(input$schoolName)
     dashboard <- support_level %>%
-      filter(school_w_district == input$schoolName) %>%
+      filter(cds == input$schoolName) %>%
       mutate(year = 2018) %>%
       select(`Year` = year,
              `CCI` = cci,
@@ -304,7 +368,7 @@ server <- function(input, output) {
   
   output$title <-
     renderText({
-      input$schoolName
+      schoolData()$schoolname
     })
   
   output$cds <-
@@ -341,7 +405,7 @@ server <- function(input, output) {
     renderUI({
       status <- schoolData()$identification[1] 
       result <- case_when(
-        status == "CSI Grad Rate" ~ "<h3>CSI Grad Rate</h3>",
+        status == "CSI Grad" ~ "<h3>CSI Grad Rate</h3>",
         status == "CSI Low Perform" ~ "<h3>CSI Low Perform</h3>",
         status == "ATSI" ~ "<h3>ATSI</h3>",
         status == "General Assistance" ~ "<h3>General Assistance</h3>"

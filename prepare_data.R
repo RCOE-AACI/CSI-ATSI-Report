@@ -3,7 +3,8 @@ library(readxl)
 
 # Create entity list
 directory <- read_excel('data/pubschls.xlsx', skip = 5) %>%
-  select(cds = CDSCode, County, District, School)
+  select(cds = CDSCode, County, District, School, StatusType) %>%
+  filter(StatusType == "Active")
 lea_list <- directory %>%
   mutate(cds = substr(cds,1,7)) %>%
   select(cds, County, District) %>%
@@ -336,7 +337,7 @@ support_level_w_demos <-
   left_join(demos_all) %>%
   mutate(school_w_district = paste0(schoolname, ' (', districtname, ')'),
          mismatch = if_else(identification != CDEStatus, TRUE, FALSE)) %>%
-  filter(mismatch == FALSE)
+  filter(mismatch == FALSE | !is.na(mismatch))
 
 # Audit
 support_audit <- support_level %>%
