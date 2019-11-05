@@ -1,4 +1,20 @@
 library(tidyverse)
+library(readxl)
+
+# Create entity list
+directory <- read_excel('data/pubschls.xlsx', skip = 5) %>%
+  select(cds = CDSCode, County, District, School)
+lea_list <- directory %>%
+  mutate(cds = substr(cds,1,7)) %>%
+  select(cds, County, District) %>%
+  unique()
+county_list <- directory %>%
+  mutate(cds = substr(cds,1,2)) %>%
+  select(cds, County) %>%
+  unique()
+saveRDS(directory, file = 'CSI-ATSI/directory.RDS')
+saveRDS(lea_list, file = 'CSI-ATSI/lea_list.RDS')
+saveRDS(county_list, file = 'CSI-ATSI/county_list.RDS')
 
 # Import 2017 data
 

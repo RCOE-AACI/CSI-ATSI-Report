@@ -13,6 +13,14 @@ library(DT)
 support_level <- readRDS('support_level.RDS')
 group_file <- readRDS('group_file.RDS')
 school_choices <- sort(support_level$school_w_district)
+directory <- readRDS('directory.RDS')
+county_list <- readRDS('county_list.RDS')
+lea_list <- readRDS('lea_list.RDS')
+
+county_list_named <- as.character(c(" ", county_list$cds))
+names(county_list_named) <- c(" ", county_list$County)
+
+filtered_leas <- support_level %>% pull(districtname) %>% unique()
 
 studentgrouplist <- c(
   'EL',
@@ -72,6 +80,9 @@ ui <- fluidPage(
       #red-border {
           border: 4px solid red;
       }
+      body {
+      -webkit-print-color-adjust: exact !important;
+      }
     ")),
   
   # Application title
@@ -80,6 +91,15 @@ ui <- fluidPage(
   # Sidebar with a slider input for number of bins 
   sidebarLayout(
     sidebarPanel(
+      selectInput("countyName",
+                  h3("Select County"),
+                  choices = county_list_named,
+                  selected = " "),
+      conditionalPanel(
+        condition = "input.countyName != ' ' ",
+        selectInput("districtName",
+                     h4("Select District"),
+                     choices=filtered_leas)),
       selectizeInput("schoolName",
                      "Please type in a school name:",
                      choices = c("Choose"="", school_choices),
@@ -198,6 +218,11 @@ ui <- fluidPage(
 # Define server logic required to draw a histogram
 server <- function(input, output) {
   
+  filtered_leas <- reactive({
+    tempChoice <- support_level %>% filter(subset(cds,1,2) == input$countyname) %>% pull(districtname) %>% unique() 
+  
+    return(tempChoice)
+    })
   
   schoolData <- reactive({
     
@@ -343,7 +368,11 @@ server <- function(input, output) {
         formatStyle(names(dashboard()), 
                     backgroundColor = styleEqual(
                       c("Red","Orange","Yellow","Green","Blue"),
-                      c('rgba(255,0,0,0.5)','rgba(255,165,0,0.5)','rgba(255,255,0,0.5)','rgba(0,255,0,0.5)','rgba(0,0,255,0.5)')
+                      c('rgba(255,0,0,0.5)',
+                        'rgba(255,165,0,0.5)',
+                        'rgba(255,255,0,0.5)',
+                        'rgba(0,255,0,0.5)',
+                        'rgba(0,0,255,0.5)')
                     )
         )
     }) 
@@ -367,7 +396,11 @@ server <- function(input, output) {
                             select(-`Student Group`) ), 
                     backgroundColor = styleEqual(
                       c("Red","Orange","Yellow","Green","Blue"),
-                      c('rgba(255,0,0,0.5)','rgba(255,165,0,0.5)','rgba(255,255,0,0.5)','rgba(0,255,0,0.5)','rgba(0,0,255,0.5)')
+                      c('rgba(255,0,0,0.5)',
+                        'rgba(255,165,0,0.5)',
+                        'rgba(255,255,0,0.5)',
+                        'rgba(0,255,0,0.5)',
+                        'rgba(0,0,255,0.5)')
                     )
         )
     })
